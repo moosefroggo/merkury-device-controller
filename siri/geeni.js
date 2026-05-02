@@ -197,15 +197,15 @@ async function run(paramStr) {
 
 // ── entry point ───────────────────────────────────────────────────────────────
 
-const param = args.shortcutParameter || Script.parameter();
-
-try {
-  const result = await run(param);
-  Script.setShortcutOutput(result);
-  console.log("✅ " + result);
-} catch (e) {
-  Script.setShortcutOutput("❌ " + e.message);
-  console.error("❌ " + e.message);
-}
-
-Script.complete();
+(async () => {
+  const param = args.shortcutParameter;
+  try {
+    const result = await run(param);
+    Script.setShortcutOutput(result);
+    console.log("OK: " + result);
+  } catch (e) {
+    Script.setShortcutOutput("ERROR: " + e.message);
+    console.error("ERROR: " + e.message);
+  }
+  Script.complete();
+})();
