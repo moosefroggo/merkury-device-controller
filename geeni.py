@@ -125,18 +125,27 @@ def set_setting(creds, device_id, setting_id, value):
     return r
 
 
-def resolve_device(arg):
-    return DEVICE_IDS.get(arg, arg)
+
+SCENES = ["night", "rainbow", "reading", "cocktail", "leisure",
+          "soft", "blinking", "rave", "nature", "custom"]
+
+
+def resolve_devices(arg):
+    """Return list of device IDs. 'all' expands to all known devices."""
+    if arg == "all":
+        return list(DEVICE_IDS.values())
+    return [DEVICE_IDS.get(arg, arg)]
 
 
 def usage():
-    print("""Usage:
+    print(f"""Usage:
   python3 geeni.py devices
-  python3 geeni.py on         <1|2|device_id>
-  python3 geeni.py off        <1|2|device_id>
-  python3 geeni.py brightness <1|2|device_id> <0-100>
-  python3 geeni.py color      <1|2|device_id> <RRGGBB>
-  python3 geeni.py colortemp  <1|2|device_id> <2700-6500>
+  python3 geeni.py on         <1|2|all|device_id>
+  python3 geeni.py off        <1|2|all|device_id>
+  python3 geeni.py brightness <1|2|all|device_id> <0-100>
+  python3 geeni.py color      <1|2|all|device_id> <RRGGBB>
+  python3 geeni.py colortemp  <1|2|all|device_id> <2700-6500>
+  python3 geeni.py scene      <1|2|all|device_id> <{'|'.join(SCENES)}>
 
 Known devices:""")
     for k, v in DEVICE_IDS.items():
@@ -156,13 +165,26 @@ def main():
     if cmd == "devices":
         list_devices(creds)
     elif cmd in ("on", "off"):
-        set_setting(creds, resolve_device(sys.argv[2]), "light.stateOn", 1 if cmd == "on" else 0)
+        val = 1 if cmd == "on" else 0
+        for did in resolve_devices(sys.argv[2]):
+            set_setting(creds, did, "light.stateOn", val)
     elif cmd == "brightness":
-        set_setting(creds, resolve_device(sys.argv[2]), "light.brightness", int(sys.argv[3]))
+        for did in resolve_devices(sys.argv[2]):
+            set_setting(creds, did, "light.brightness", int(sys.argv[3]))
     elif cmd == "color":
-        set_setting(creds, resolve_device(sys.argv[2]), "light.color", sys.argv[3].lstrip("#"))
+        for did in resolve_devices(sys.argv[2]):
+            set_setting(creds, did, "light.color", sys.argv[3].lstrip("#"))
     elif cmd == "colortemp":
-        set_setting(creds, resolve_device(sys.argv[2]), "light.colorTemp", int(sys.argv[3]))
+        for did in resolve_devices(sys.argv[2]):
+            set_setting(creds, did, "light.colorTemp", int(sys.argv[3]))
+    elif cmd == "scene":
+        scene = sys.argv[3].lower()
+        if scene not in SCENES:
+            print(f"Unknown scene '{scene}'. Valid: {', '.join(SCENES)}")
+            sys.exit(1)
+        for did in resolve_devices(sys.argv[2]):
+            set_setting(creds, did, "light.scene", scene)
+            set_setting(creds, did, "light.mode", "scene")
     else:
         usage()
 
