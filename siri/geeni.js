@@ -165,7 +165,8 @@ async function run(paramStr) {
 
   } else if (cmd === "color") {
     var devices = resolveDevices(parts[1] || "all");
-    var hex = (parts[2] || "FF6A00").replace("#", "").toUpperCase();
+    var hex = (parts[2] || "FF6A00").toUpperCase();
+    if (hex.charCodeAt(0) === 35) hex = hex.slice(1); // strip leading hex-sign if present
     for (var i = 0; i < devices.length; i++) {
       await setSetting(creds, devices[i], "light.color", hex);
       results.push("color " + hex + " ok:" + devices[i].slice(0, 8));
